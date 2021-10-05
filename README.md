@@ -11,7 +11,9 @@ Else continue:
 
 2. Obtain a YouTube video or playlist url of your choice, and then edit 'backend/test.py' according to the format list below.
 
-3. run the test file by optionally entering the command <code>test</code>.
+3. run the test file by entering the command <code>test</code>.
+
+4. Note: before running the program, make sure to re-open your terminal inside the cloned 'mytube' directory.
 
 <br/><br/>
 

@@ -103,7 +103,7 @@ def download_audio_list(url, prefQuality):
 
 
 def download_audio(url, prefQuality, playlist=None):
-    print('downloading', url, '...')
+    print('\n\ndownloading', url, '...\n\n')
     v = get_audio(url, prefQuality)
     convert_store_audio(v, playlist)
 
@@ -219,7 +219,7 @@ def download_video_list(url, prefQuality):
 
 
 def download_video(url, prefQuality):
-    print('downloading', url, '...')
+    print('\n\ndownloading', url, '...\n\n')
     # get video 1st, else risk file overridding error !
     v = get_video(url, prefQuality)
     # print("got v ", v, "\n\n")
