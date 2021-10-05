@@ -20,14 +20,13 @@ from mutagen.mp4 import MP4, MP4Cover
 #############
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE_DIR = BASE_DIR + "\\mytube"
 
 STORAGE_PATH = BASE_DIR + "\\data"
 AUDIO_STORAGE_PATH = STORAGE_PATH + "\\audio"
 VIDEO_STORAGE_PATH = STORAGE_PATH + "\\video"
 IMAGE_STORAGE_PATH = STORAGE_PATH + "\\image"
 FILE_IMG_PATH = os.path.join(BASE_DIR, "cover.jpg")
-FILE_OUTPUT_PATH = 'C:\\Users\\jonat\\Downloads\\pytube'
+# FILE_OUTPUT_PATH = 'C:\\Users\\jonat\\Downloads\\pytube'
 
 
 ###############
@@ -43,7 +42,7 @@ def strip_letters(string):
 def strip_symbols(input_string):
 
     arr = ['`', '!', '@', '#', '$', '%', '^', '&', '*', '?',
-           '=', '+', "'", '"', ',', '.', '/', '<', '>', ]
+           '=', '+', "'", '"', ',', '.', '/', '<', '>', ';', ':']
 
     return "".join(u for u in input_string if u not in (arr))
 
@@ -63,11 +62,8 @@ def downloaded():
 
 def join(array):
     result = ""
-
     while (len(array) > 0):
         result = os.path.join(result, array.pop(0))
-
-    print(result)
     return result
 
 
@@ -107,7 +103,7 @@ def download_audio_list(url, prefQuality):
 
 
 def download_audio(url, prefQuality, playlist=None):
-    print(url)
+    print('downloading', url, '...')
     v = get_audio(url, prefQuality)
     convert_store_audio(v, playlist)
 
@@ -120,8 +116,8 @@ def get_audio(url, prefQuality):
     sorted_list = sorted(filtered_list, key=lambda x: int(
         strip_letters(x.abr)), reverse=False)
 
-    for x in sorted_list:
-        print(strip_letters(x.abr), x)
+    # for x in sorted_list:
+    #     print(strip_letters(x.abr), x)
 
     v = 0
 
@@ -131,7 +127,7 @@ def get_audio(url, prefQuality):
     elif prefQuality == "min":
         v = sorted_list[0]
 
-    print(v, '\n\n')
+    # print(v, '\n\n')
 
     v.download()
 
@@ -160,7 +156,7 @@ def convert_store_audio(audio, playlist):
     ffmpeg_cmd = f'ffmpeg -i "{path}" -vn "{new_file_path}"'
     os_cmd = f'cmd /c "{ffmpeg_cmd}"'
 
-    print(audio['path'], '\n\n', new_file_path, '\n\n')
+    # print(audio['path'], '\n\n', new_file_path, '\n\n')
 
     subprocess.call(os_cmd)
 
@@ -172,10 +168,10 @@ def convert_store_audio(audio, playlist):
     has_image = get_url_image(audio['url'])
 
     file_type = mimetypes.MimeTypes().guess_type(new_file_path)[0]
-    print(file_type)
+    # print(file_type)
 
     audiofile = eyed3.load(new_file_path)
-    print(audiofile)
+    # print(audiofile)
 
     if(audiofile is None):
         raise Exception("audiofile is None ! ")
@@ -223,12 +219,12 @@ def download_video_list(url, prefQuality):
 
 
 def download_video(url, prefQuality):
-    print(url, "\n\n")
+    print('downloading', url, '...')
     # get video 1st, else risk file overridding error !
     v = get_video(url, prefQuality)
-    print("got v ", v, "\n\n")
+    # print("got v ", v, "\n\n")
     a = get_audio(url, prefQuality)
-    print("got a ", a, "\n\n")
+    # print("got a ", a, "\n\n")
     merge_store_video(a, v)
 
 
@@ -242,8 +238,8 @@ def get_video(url, prefQuality):
     sorted_list = sorted(filtered_list, key=lambda x: int(
         strip_letters(x.resolution)), reverse=False)
 
-    for x in sorted_list:
-        print(strip_letters(x.resolution), x)
+    # for x in sorted_list:
+    # print(strip_letters(x.resolution), x)
 
     v = 0
 
@@ -253,7 +249,7 @@ def get_video(url, prefQuality):
     elif prefQuality == "min":
         v = sorted_list[0]
 
-    print(v)
+    # print(v)
 
     v.download()
 
