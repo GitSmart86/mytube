@@ -1,1 +1,1 @@
-python gui/main.py
+python frontend/main.py
