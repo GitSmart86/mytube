@@ -4,4 +4,4 @@ data/**/*.mp3
 data/**/*.jpg
 data/**/*.mp4
 data/**/*.wav
-gui\RESOURCES_KIVY
+RESOURCES_KIVY
