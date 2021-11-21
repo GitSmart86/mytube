@@ -19,14 +19,14 @@ from mutagen.mp4 import MP4, MP4Cover
 #
 #############
 
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+FILE_PATH_COVER_ART = BASE_DIR + "\\cover.jpg"
 STORAGE_PATH = BASE_DIR + "\\data"
-AUDIO_STORAGE_PATH = STORAGE_PATH + "\\audio"
-VIDEO_STORAGE_PATH = STORAGE_PATH + "\\video"
-IMAGE_STORAGE_PATH = STORAGE_PATH + "\\image"
-FILE_IMG_PATH = os.path.join(BASE_DIR, "cover.jpg")
-# FILE_OUTPUT_PATH = 'C:\\Users\\jonat\\Downloads\\pytube'
+STORAGE_PATH_AUDIO = STORAGE_PATH + "\\audio"
+STORAGE_PATH_VIDEO = STORAGE_PATH + "\\video"
+STORAGE_PATH_IMAGE = STORAGE_PATH + "\\image"
 
 
 ###############
@@ -35,14 +35,39 @@ FILE_IMG_PATH = os.path.join(BASE_DIR, "cover.jpg")
 #
 ###############
 
+
+def dir_make(dir):
+    if(not os.path.isdir(dir)):
+        os.mkdir(dir)
+
+
+def file_exists(path):
+    return os.path.exists(path)
+
+
+def file_delete(path):
+    if(os.path.exists(path)):
+        os.remove(path)
+
+
+def file_rename(old_path, new_path):
+    file_delete(new_path)
+    os.rename(old_path, new_path)
+
+
+def file_move(old_path, new_path):
+    file_delete(new_path)
+    shutil.move(old_path, new_path)
+
+
 def strip_letters(string):
     return re.sub(r'[a-zA-Z]', '', string)
 
 
 def strip_symbols(input_string):
 
-    arr = ['`', '!', '@', '#', '$', '%', '^', '&', '*', '?',
-           '=', '+', "'", '"', ',', '.', '/', '<', '>', ';', ':']
+    arr = ['`', '@', '#', '$', '%', '^', '&', '*', '?',
+           '=', '+', "'", '"', ',', '.', '/', '<', '>', ';', ':', '|']
 
     return "".join(u for u in input_string if u not in (arr))
 
@@ -50,14 +75,6 @@ def strip_symbols(input_string):
 def print_list(list):
     for i in list:
         print(i)
-
-
-def downloading():
-    print("downloading")
-
-
-def downloaded():
-    print("finished downloading")
 
 
 def join(array):
@@ -90,22 +107,45 @@ def get_url_image(url):
     return has_image
 
 
+def store_cover_art(old_path, new_name, playlist=None):
+
+    if(file_exists(old_path)):
+
+        new_name_path = BASE_DIR + '\\' + new_name
+
+        file_rename(old_path, new_name_path)
+
+        image_storage_dir = STORAGE_PATH_IMAGE
+        if playlist is not None:
+            image_storage_dir = os.path.join(
+                image_storage_dir, playlist['title'])
+
+        dir_make(image_storage_dir)
+        image_storage_path = os.path.join(
+            image_storage_dir, new_name)
+
+        file_move(new_name_path, image_storage_path)
+
+
 #############
 #
 #   Audio
 #
 #############
 
+
 def download_audio_list(url, prefQuality):
     p = Playlist(url)
     for i in range(0, len(p)):
+        print(f"\n\n[ {i+1} / {len(p)} ]    downloading {url}...\n\n")
         download_audio(p[i], prefQuality, {'index': i, 'title': p.title})
 
 
 def download_audio(url, prefQuality, playlist=None):
-    print('\n\ndownloading', url, '...\n\n')
-    v = get_audio(url, prefQuality)
-    convert_store_audio(v, playlist)
+    if playlist is None:
+        print(f"\n\ndownloading {url}...\n\n")
+    audio = get_audio(url, prefQuality)
+    convert_store_audio(audio, playlist)
 
 
 def get_audio(url, prefQuality):
@@ -140,38 +180,41 @@ def get_audio(url, prefQuality):
 
 def convert_store_audio(audio, playlist):
 
+    audio_storage_path = ""
+    if playlist is None:
+        audio_storage_path = STORAGE_PATH_AUDIO
+    else:
+        audio_storage_path = STORAGE_PATH_AUDIO + '\\' + playlist['title']
+
     new_file_path = join([
-        AUDIO_STORAGE_PATH,
+        audio_storage_path,
         strip_symbols(audio['name']) + ".mp3"
     ])
 
     path = audio['path']
 
-    if(not os.path.isdir(AUDIO_STORAGE_PATH)):
-        os.mkdir(AUDIO_STORAGE_PATH)
+    # convert file to mp3
 
-    if(os.path.exists(new_file_path)):
-        os.remove(new_file_path)
+    if(not os.path.isdir(STORAGE_PATH_AUDIO)):
+        os.mkdir(STORAGE_PATH_AUDIO)
+
+    if(not os.path.isdir(audio_storage_path)):
+        os.mkdir(audio_storage_path)
+
+    file_delete(new_file_path)
 
     ffmpeg_cmd = f'ffmpeg -i "{path}" -vn "{new_file_path}"'
     os_cmd = f'cmd /c "{ffmpeg_cmd}"'
 
-    # print(audio['path'], '\n\n', new_file_path, '\n\n')
-
     subprocess.call(os_cmd)
 
-    if(os.path.exists(audio['path'])):
-        os.remove(audio['path'])
+    file_delete(audio['path'])
 
     # set cover art
 
     has_image = get_url_image(audio['url'])
 
-    file_type = mimetypes.MimeTypes().guess_type(new_file_path)[0]
-    # print(file_type)
-
     audiofile = eyed3.load(new_file_path)
-    # print(audiofile)
 
     if(audiofile is None):
         raise Exception("audiofile is None ! ")
@@ -181,7 +224,7 @@ def convert_store_audio(audio, playlist):
 
     if(has_image):
         audiofile.tag.images.set(ImageFrame.FRONT_COVER, open(
-            FILE_IMG_PATH, 'rb').read(), 'image/jpeg')
+            FILE_PATH_COVER_ART, 'rb').read(), 'image/jpeg')
 
     audiofile.tag.title = audio['name']
     audiofile.tag.album = playlist['title'] if playlist is not None else ''
@@ -190,19 +233,15 @@ def convert_store_audio(audio, playlist):
     audiofile.tag.track_num = playlist['index'] if playlist is not None else 0
     audiofile.tag.save(version=eyed3.id3.ID3_V2_3)
 
-    if(os.path.exists(FILE_IMG_PATH)):
+    # save copy of img
 
-        new_FILE_IMG_PATH = os.path.join(
-            BASE_DIR, audio['file_name'].split('.')[0] + '.jpg')
-        image_storage_path = os.path.join(
-            IMAGE_STORAGE_PATH, audio['file_name'].split('.')[0] + '.jpg')
+    new_name = audio['file_name'].split('.')[0] + '.jpg'
 
-        os.rename(FILE_IMG_PATH, new_FILE_IMG_PATH)
-
-        if(os.path.exists(image_storage_path)):
-            os.remove(image_storage_path)
-
-        shutil.move(new_FILE_IMG_PATH, image_storage_path)
+    store_cover_art(
+        FILE_PATH_COVER_ART,
+        new_name,
+        playlist
+    )
 
 
 #############
@@ -215,17 +254,17 @@ def convert_store_audio(audio, playlist):
 def download_video_list(url, prefQuality):
     p = Playlist(url)
     for i in range(0, len(p)):
-        download_video(p[i], prefQuality)
+        print(f"\n\n[ {i+1} / {len(p)} ]    downloading {url}...\n\n")
+        download_video(p[i], prefQuality, {'index': i, 'title': p.title})
 
 
-def download_video(url, prefQuality):
-    print('\n\ndownloading', url, '...\n\n')
-    # get video 1st, else risk file overridding error !
+def download_video(url, prefQuality, playlist=None):
+    if playlist is None:
+        print(f"\n\ndownloading {url}...\n\n")
+
     v = get_video(url, prefQuality)
-    # print("got v ", v, "\n\n")
     a = get_audio(url, prefQuality)
-    # print("got a ", a, "\n\n")
-    merge_store_video(a, v)
+    merge_store_video(a, v, playlist)
 
 
 def get_video(url, prefQuality):
@@ -260,22 +299,24 @@ def get_video(url, prefQuality):
     new_v_name = cleaned_v_name + "_video." + v.mime_type.split("/")[1]
     new_v_path = os.path.join(BASE_DIR, new_v_name)
 
-    if(os.path.exists(new_v_path)):
-        os.remove(new_v_path)
-
-    os.rename(v_path, new_v_path)
+    file_rename(v_path, new_v_path)
 
     return {'file': v, 'file_name': new_v_name, 'name': cleaned_v_name, 'path': new_v_path, 'url': url}
 
 
-def merge_store_video(audio, video):
-    new_v_path = os.path.join(VIDEO_STORAGE_PATH, video['file_name'])
+def merge_store_video(audio, video, playlist=None):
 
-    if(not os.path.isdir(VIDEO_STORAGE_PATH)):
-        os.mkdir(VIDEO_STORAGE_PATH)
+    # merge audio + video
 
-    if(os.path.exists(new_v_path)):
-        os.remove(new_v_path)
+    new_v_dir = STORAGE_PATH_VIDEO
+
+    if playlist is not None:
+        new_v_dir = os.path.join(new_v_dir, playlist['title'])
+
+    new_v_path = os.path.join(new_v_dir, video['file_name'])
+
+    dir_make(new_v_dir)
+    file_delete(new_v_path)
 
     # ffmpeg_cmd = 'ffmpeg -i "'+video['file_name']+'" -i "'+audio['file_name'] + \
     #     '" -c:v copy -c:a copy -map 0:v:0 -map 1:a:0 "'+new_v_path+'"'
@@ -287,11 +328,10 @@ def merge_store_video(audio, video):
 
     subprocess.call(os_cmd)
 
-    if(os.path.exists(video['path'])):
-        os.remove(video['path'])
+    file_delete(video['path'])
+    file_delete(audio['path'])
 
-    if(os.path.exists(audio['path'])):
-        os.remove(audio['path'])
+    # set new file attributes
 
     has_image = get_url_image(video['url'])
 
@@ -308,5 +348,12 @@ def merge_store_video(audio, video):
 
         videofile.save()
 
-    if(os.path.exists(FILE_IMG_PATH)):
-        os.remove(FILE_IMG_PATH)
+    # save copy of img
+
+    new_name = video['file_name'].split('.')[0] + '.jpg'
+
+    store_cover_art(
+        FILE_PATH_COVER_ART,
+        new_name,
+        playlist
+    )

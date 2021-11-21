@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "react-native-childprocess": "^0.1.4"
+  }
+}

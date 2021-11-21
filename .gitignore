@@ -1,6 +1,7 @@
 /venv
 /__pycache__
-**/audio/*.mp3
-**/image/*.jpg
-**/video/*.mp4
 RESOURCES_KIVY
+**/audio/**/*.mp3
+**/image/**/*.jpg
+**/video/**/*.mp4
+node_modules
