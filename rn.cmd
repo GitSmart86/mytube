@@ -1,2 +1,2 @@
-cd frontend/react_native
+cd backend/react_native
 npx react-native run-windows
