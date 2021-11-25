@@ -5,3 +5,5 @@ RESOURCES_KIVY
 **/image/**/*.jpg
 **/video/**/*.mp4
 node_modules
+_old
+out/
